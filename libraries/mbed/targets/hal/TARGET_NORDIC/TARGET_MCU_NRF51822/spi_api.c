@@ -137,6 +137,7 @@ void spi_init(spi_t *obj, PinName mosi, PinName miso, PinName sclk, PinName ssel
                                     | (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos)
                                     | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
                                     | (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos);
+
         obj->spi->PSELSCK = sclk;
 
         //NRF_GPIO->DIR &= ~(1<<miso);
@@ -286,6 +287,18 @@ int spi_slave_read(spi_t *obj)
 void spi_slave_write(spi_t *obj, int value)
 {
     m_tx_buf[0]                = value & 0xFF;
+    obj->spis->TASKS_RELEASE   = 1;
+    obj->spis->EVENTS_ACQUIRED = 0;
+    obj->spis->EVENTS_END      = 0;
+    m_read_cntr = 0;
+}
+
+void spi_slave_write_buffer(spi_t *obj, uint8_t buffer[], uint8_t bufferLength)
+{
+    for (int i = 0; i < bufferLength; i++)
+    {
+        m_tx_buf[i]                = buffer[i];
+    }
     obj->spis->TASKS_RELEASE   = 1;
     obj->spis->EVENTS_ACQUIRED = 0;
     obj->spis->EVENTS_END      = 0;

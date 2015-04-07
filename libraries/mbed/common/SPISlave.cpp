@@ -53,6 +53,11 @@ void SPISlave::reply(int value) {
     spi_slave_write(&_spi, value);
 }
 
+void SPISlave::write(uint8_t buffer[], uint8_t bufferLength) {
+    spi_slave_write_buffer(&_spi, buffer, bufferLength);
+}
+
+
 } // namespace mbed
 
 #endif

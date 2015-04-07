@@ -111,6 +111,10 @@ public:
      */
     void reply(int value);
 
+
+    void write(uint8_t buffer[], uint8_t bufferLength);
+
+
 protected:
     spi_t _spi;
 
