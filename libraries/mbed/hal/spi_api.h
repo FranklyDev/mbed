@@ -34,6 +34,7 @@ int  spi_master_write (spi_t *obj, int value);
 int  spi_slave_receive(spi_t *obj);
 int  spi_slave_read   (spi_t *obj);
 void spi_slave_write  (spi_t *obj, int value);
+void spi_slave_write_buffer(spi_t *obj, uint8_t buffer[], uint8_t bufferLength);
 int  spi_busy         (spi_t *obj);
 
 #ifdef __cplusplus

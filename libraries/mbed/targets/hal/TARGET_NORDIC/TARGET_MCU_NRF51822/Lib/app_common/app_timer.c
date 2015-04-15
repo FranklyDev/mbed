@@ -22,12 +22,12 @@
 
 
 #define RTC1_IRQ_PRI            APP_IRQ_PRIORITY_LOW                        /**< Priority of the RTC1 interrupt (used for checking for timeouts and executing timeout handlers). */
-#define SWI0_IRQ_PRI            APP_IRQ_PRIORITY_LOW                        /**< Priority of the SWI0 interrupt (used for updating the timer list). */
+#define SWI1_IRQ_PRI            APP_IRQ_PRIORITY_LOW                        /**< Priority of the SWI1 interrupt (used for updating the timer list). */
 
 // The current design assumes that both interrupt handlers run at the same interrupt level.
 // If this is to be changed, protection must be added to prevent them from interrupting each other
 // (e.g. by using guard/trigger flags).
-STATIC_ASSERT(RTC1_IRQ_PRI == SWI0_IRQ_PRI);
+STATIC_ASSERT(RTC1_IRQ_PRI == SWI1_IRQ_PRI);
 
 #define APP_HIGH_USER_ID        0                                           /**< User Id for the Application High "user". */
 #define APP_LOW_USER_ID         1                                           /**< User Id for the Application Low "user". */
@@ -344,11 +344,11 @@ static void timer_timeouts_check_sched(void)
 }
 
 
-/**@brief Function for scheduling a timer list update by generating a SWI0 interrupt.
+/**@brief Function for scheduling a timer list update by generating a SWI1 interrupt.
  */
 static void timer_list_handler_sched(void)
 {
-    NVIC_SetPendingIRQ(SWI0_IRQn);
+    NVIC_SetPendingIRQ(SWI1_IRQn);
 }
 
 
@@ -931,11 +931,11 @@ void RTC1_IRQHandler(void)
     timer_timeouts_check();
 }
 
-/**@brief Function for handling the SWI0 interrupt.
+/**@brief Function for handling the SWI1 interrupt.
  *
  * @details Performs all updates to the timer list.
  */
-void SWI0_IRQHandler(void)
+void SWI1_IRQHandler(void)
 {
     timer_list_handler();
 }
@@ -1002,9 +1002,9 @@ uint32_t app_timer_init(uint32_t                      prescaler,
     m_ticks_elapsed_q_read_ind  = 0;
     m_ticks_elapsed_q_write_ind = 0;
 
-    NVIC_ClearPendingIRQ(SWI0_IRQn);
-    NVIC_SetPriority(SWI0_IRQn, SWI0_IRQ_PRI);
-    NVIC_EnableIRQ(SWI0_IRQn);
+    NVIC_ClearPendingIRQ(SWI1_IRQn);
+    NVIC_SetPriority(SWI1_IRQn, SWI1_IRQ_PRI);
+    NVIC_EnableIRQ(SWI1_IRQn);
 
     rtc1_init(prescaler);
     rtc1_start();
