@@ -56,7 +56,7 @@ static const PinMap PinMap_PWM[] = {
 };
 
 static NRF_TIMER_Type *Timers[1] = {
-    NRF_TIMER2
+    NRF_TIMER1
 };
 
 uint16_t PERIOD            = 20000 / TIMER_PRECISION;  //20ms
@@ -70,22 +70,22 @@ uint16_t ACTUAL_PULSE[NO_PWMS] = {0, 0, 0};
 #ifdef __cplusplus
 extern "C" {
 #endif
-void TIMER2_IRQHandler(void)
+void TIMER1_IRQHandler(void)
 {
-    NRF_TIMER2->EVENTS_COMPARE[3] = 0;
-    NRF_TIMER2->CC[3]             =  PERIOD;
+    NRF_TIMER1->EVENTS_COMPARE[3] = 0;
+    NRF_TIMER1->CC[3]             =  PERIOD;
 
     if (PWM_taken[0]) {
-        NRF_TIMER2->CC[0] = PULSE_WIDTH[0];
+        NRF_TIMER1->CC[0] = PULSE_WIDTH[0];
     }
     if (PWM_taken[1]) {
-        NRF_TIMER2->CC[1] = PULSE_WIDTH[1];
+        NRF_TIMER1->CC[1] = PULSE_WIDTH[1];
     }
     if (PWM_taken[2]) {
-        NRF_TIMER2->CC[2] = PULSE_WIDTH[2];
+        NRF_TIMER1->CC[2] = PULSE_WIDTH[2];
     }
 
-    NRF_TIMER2->TASKS_START = 1;
+    NRF_TIMER1->TASKS_START = 1;
 }
 
 #ifdef __cplusplus
@@ -110,8 +110,8 @@ void timer_init(uint8_t pwmChoice)
     timer->CC[pwmChoice] = PULSE_WIDTH[pwmChoice];
 
     //high priority application interrupt
-    NVIC_SetPriority(TIMER2_IRQn, 1);
-    NVIC_EnableIRQ(TIMER2_IRQn);
+    NVIC_SetPriority(TIMER1_IRQn, 1);
+    NVIC_EnableIRQ(TIMER1_IRQn);
 
     timer->TASKS_START = 0x01;
 }
@@ -250,8 +250,8 @@ void pwmout_write(pwmout_t *obj, float value)
 {
     uint16_t oldPulseWidth;
 
-    NRF_TIMER2->EVENTS_COMPARE[3] = 0;
-    NRF_TIMER2->TASKS_STOP        = 1;
+    NRF_TIMER1->EVENTS_COMPARE[3] = 0;
+    NRF_TIMER1->TASKS_STOP        = 1;
 
     if (value < 0.0f) {
         value = 0.0;
@@ -272,9 +272,9 @@ void pwmout_write(pwmout_t *obj, float value)
         setModulation(obj, 1, oldPulseWidth == PERIOD);
     }
 
-    NRF_TIMER2->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
-    NRF_TIMER2->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
-    NRF_TIMER2->TASKS_START = 1;
+    NRF_TIMER1->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
+    NRF_TIMER1->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
+    NRF_TIMER1->TASKS_START = 1;
 }
 
 float pwmout_read(pwmout_t *obj)
@@ -297,8 +297,8 @@ void pwmout_period_us(pwmout_t *obj, int us)
 {
     uint32_t periodInTicks = us / TIMER_PRECISION;
 
-    NRF_TIMER2->EVENTS_COMPARE[3] = 0;
-    NRF_TIMER2->TASKS_STOP        = 1;
+    NRF_TIMER1->EVENTS_COMPARE[3] = 0;
+    NRF_TIMER1->TASKS_STOP        = 1;
 
     if (periodInTicks>((1 << 16) - 1)) {
         PERIOD = (1 << 16) - 1; //131ms
@@ -307,9 +307,9 @@ void pwmout_period_us(pwmout_t *obj, int us)
     } else {
         PERIOD = periodInTicks;
     }
-    NRF_TIMER2->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
-    NRF_TIMER2->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
-    NRF_TIMER2->TASKS_START = 1;
+    NRF_TIMER1->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
+    NRF_TIMER1->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
+    NRF_TIMER1->TASKS_START = 1;
 }
 
 void pwmout_pulsewidth(pwmout_t *obj, float seconds)
@@ -327,8 +327,8 @@ void pwmout_pulsewidth_us(pwmout_t *obj, int us)
     uint32_t pulseInTicks  = us / TIMER_PRECISION;
     uint16_t oldPulseWidth = ACTUAL_PULSE[obj->pwm];
 
-    NRF_TIMER2->EVENTS_COMPARE[3] = 0;
-    NRF_TIMER2->TASKS_STOP        = 1;
+    NRF_TIMER1->EVENTS_COMPARE[3] = 0;
+    NRF_TIMER1->TASKS_STOP        = 1;
 
     ACTUAL_PULSE[obj->pwm] = PULSE_WIDTH[obj->pwm]  = pulseInTicks;
 
@@ -341,7 +341,7 @@ void pwmout_pulsewidth_us(pwmout_t *obj, int us)
     } else if ((oldPulseWidth == 0) || (oldPulseWidth == PERIOD)) {
         setModulation(obj, 1, oldPulseWidth == PERIOD);
     }
-    NRF_TIMER2->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
-    NRF_TIMER2->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
-    NRF_TIMER2->TASKS_START = 1;
+    NRF_TIMER1->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
+    NRF_TIMER1->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
+    NRF_TIMER1->TASKS_START = 1;
 }
