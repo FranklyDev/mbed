@@ -18,6 +18,7 @@
 #include "cmsis.h"
 #include "pinmap.h"
 #include "mbed_error.h"
+#include "nrf_delay.h"
 
 // nRF51822's I2C_0 and SPI_0 (I2C_1, SPI_1 and SPIS1) share the same address.
 // They can't be used at the same time. So we use two global variable to track the usage.
@@ -36,13 +37,22 @@ void twi_master_init(i2c_t *obj, PinName sda, PinName scl, int frequency)
                               (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos) |
                               (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) |
                               (GPIO_PIN_CNF_DRIVE_S0D1 << GPIO_PIN_CNF_DRIVE_Pos) |
+                              (GPIO_PIN_CNF_PULL_Pullup    << GPIO_PIN_CNF_PULL_Pos) |
                               (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos));
 
     NRF_GPIO->PIN_CNF[sda] = ((GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos) |
                               (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos) |
                               (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) |
                               (GPIO_PIN_CNF_DRIVE_S0D1 << GPIO_PIN_CNF_DRIVE_Pos) |
+                              (GPIO_PIN_CNF_PULL_Pullup    << GPIO_PIN_CNF_PULL_Pos) |
                               (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos));
+
+
+
+    obj->i2c->EVENTS_RXDREADY = 0;
+    obj->i2c->EVENTS_TXDSENT  = 0;
+
+
 
     obj->i2c->PSELSCL = scl;
     obj->i2c->PSELSDA = sda;
@@ -93,8 +103,10 @@ void i2c_init(i2c_t *obj, PinName sda, PinName scl)
     obj->i2c->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos;
     obj->i2c->POWER        = 0;
 
-    for (int i = 0; i<100; i++) {
-    }
+    // for (int i = 0; i<100; i++) {
+    // }
+    nrf_delay_us(5); // Recover the peripheral as indicated by PAN 56: "TWI: TWI module lock-up."
+
 
     obj->i2c->POWER = 1;
     twi_master_init(obj, sda, scl, 100000);
@@ -105,8 +117,9 @@ void i2c_reset(i2c_t *obj)
     obj->i2c->EVENTS_ERROR = 0;
     obj->i2c->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos;
     obj->i2c->POWER        = 0;
-    for (int i = 0; i<100; i++) {
-    }
+    // for (int i = 0; i<100; i++) {
+    // }
+    nrf_delay_us(5); // Recover the peripheral as indicated by PAN 56: "TWI: TWI module lock-up."
 
     obj->i2c->POWER = 1;
     twi_master_init(obj, obj->sda, obj->scl, obj->freq);
@@ -161,6 +174,7 @@ int i2c_do_read(i2c_t *obj, char *data, int last)
         obj->i2c->SHORTS = 2;
     }
 
+    nrf_delay_us(20); // Recover the peripheral as indicated by PAN 56: "TWI: TWI module lock-up."
     obj->i2c->TASKS_RESUME = 1;
 
     while (!obj->i2c->EVENTS_RXDREADY) {
