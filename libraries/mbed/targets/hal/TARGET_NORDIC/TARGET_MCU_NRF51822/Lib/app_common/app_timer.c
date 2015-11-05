@@ -21,8 +21,8 @@
 #include "app_util_platform.h"
 
 
-#define RTC1_IRQ_PRI            APP_IRQ_PRIORITY_LOW                        /**< Priority of the RTC1 interrupt (used for checking for timeouts and executing timeout handlers). */
-#define SWI1_IRQ_PRI            APP_IRQ_PRIORITY_LOW                        /**< Priority of the SWI1 interrupt (used for updating the timer list). */
+#define RTC1_IRQ_PRI            0//APP_IRQ_PRIORITY_LOW                        /**< Priority of the RTC1 interrupt (used for checking for timeouts and executing timeout handlers). */
+#define SWI1_IRQ_PRI            0//APP_IRQ_PRIORITY_LOW                        /**< Priority of the SWI1 interrupt (used for updating the timer list). */
 
 // The current design assumes that both interrupt handlers run at the same interrupt level.
 // If this is to be changed, protection must be added to prevent them from interrupting each other
