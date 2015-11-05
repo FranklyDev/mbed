@@ -85,6 +85,16 @@ void TIMER1_IRQHandler(void)
         NRF_TIMER1->CC[2] = PULSE_WIDTH[2];
     }
 
+    /**
+     * Frankly patch
+     * Turn off interrupt triggering all the time to get rid of radio conflict
+     */
+    NRF_TIMER1->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
+    NRF_TIMER1->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk;// | TIMER_SHORTS_COMPARE3_STOP_Msk;
+    /**
+     * End patch
+     */
+
     NRF_TIMER1->TASKS_START = 1;
 }
 
@@ -274,6 +284,7 @@ void pwmout_write(pwmout_t *obj, float value)
 
     NRF_TIMER1->INTENSET    = TIMER_INTENSET_COMPARE3_Msk;
     NRF_TIMER1->SHORTS      = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
+
     NRF_TIMER1->TASKS_START = 1;
 }
 
